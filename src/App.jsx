@@ -35,8 +35,7 @@ return Array.from(crypto.getRandomValues(new Uint8Array(bytes)))
 return Math.random().toString(16).slice(2).padEnd(bytes * 2, "0").slice(0, bytes * 2);
 }
 }
-const generateUserId  = () => sgm_${genHex(6)};
-const generateApiKey  = () => ${ENV.API_KEY_PREFIX}${genHex(20)};
+const generateApiKey = () => `${ENV.API_KEY_PREFIX}${genHex(20)}`;
 
 function createUser(username, password, email) {
 return {
@@ -78,7 +77,7 @@ apiKey: generateApiKey(), createdAt: "2026-02-20T10:30:00.000Z",
 ];
 
 // ══ FROM: emails.js ═══════════════════════════════════════════════════════════
-const generateSubId = () => sub_${genHex(4)};
+const generateSubId = () => `sub_${genHex(4)}`;
 
 function createEmailEntry(email, ownerid, ownerUsername, paymentOwner, room) {
 return {
@@ -144,7 +143,7 @@ const fmtDate = s => new Date(s).toLocaleString("id-ID");
 const paymentLabel = s => {
 if (!s) return "-";
 const [type, ...rest] = s.split("_");
-return ${type.toUpperCase()} ${rest.join("_")};
+return `${type.toUpperCase()} ${rest.join("_")}`;
 };
 
 // ══ CSS ════════════════════════════════════════════════════════════════════════
@@ -449,13 +448,13 @@ if (!selectedRoom) { showToast("⚠️ Pilih room dulu!"); return; }
 if (!list.length)  { showToast("⚠️ Masukkan minimal 1 email Gmail!"); return; }
 const room = ROOMS.find(r => r.id === selectedRoom);
 if (!room?.open)   { showToast("🔒 Room ini sedang ditutup!"); return; }
-const pay = ${withdrawBank.toLowerCase()}_${withdrawNo || "belum-diisi"};
+const pay = `${withdrawBank.toLowerCase()}_${withdrawNo || "belum-diisi"}`;
 const newEntries = list.map(email => createEmailEntry(email, user.userid, user.username, pay, room.name));
 const updated = [...newEntries, ...emails];
 setEmails(updated);
 await SDB.setEmails(updated);
 setEmailInput("");
-showToast(✅ ${list.length} email berhasil disetor!);
+showToast(`✅ ${list.length} email berhasil disetor!`);
 };
 
 const handleGenerate = () => {
@@ -468,7 +467,7 @@ chars[Math.floor(Math.random() * 26)]).join("") +
 Math.floor(Math.random() * 900 + 100) + "@gmail.com"
 );
 setGeneratedEmails(emails);
-showToast(✨ ${n} email digenerate!);
+showToast(`✨ ${n} email digenerate!`);
 };
 
 const handleWithdraw = async () => {
@@ -477,7 +476,7 @@ if (!amt || amt < 1000)  { showToast("⚠️ Minimum Rp 1.000!"); return; }
 if (amt > saldo)          { showToast("⚠️ Saldo tidak cukup!"); return; }
 await updateSaldo(saldo - amt);
 setWithdrawAmount("");
-showToast(💸 Withdraw ${fmtRp(amt)} diproses!);
+showToast(`💸 Withdraw ${fmtRp(amt)} diproses!`);
 };
 
 const bubbles = ["Halo halo! 🇮🇩", "Boo!! 👻", "Selamat datang! ✨", "Gaskeun setor! 🚀"];
@@ -670,43 +669,53 @@ return (
 
 // ── Riwayat ───────────────────────────────────────────────────────────────────
 function RiwayatPage({ myEmails, histTab, setHistTab }) {
-return (
-<>
-<div className="phdr">
-<h2>🕐 Riwayat</h2>
-<p>Semua aktivitas setoran akun Anda.</p>
-<div className="phdr-bg">🕐</div>
-</div>
-<div className="card">
-<div className="tab-bar">
-<button className={tab ${histTab==="setoran"?"active":""}} onClick={() => setHistTab("setoran")}>📤 Setoran</button>
-<button className={tab ${histTab==="penarikan"?"active":""}} onClick={() => setHistTab("penarikan")}>💳 Penarikan</button>
-</div>
-{histTab === "setoran" && (
-myEmails.length === 0
-? <div style={{color:"#bbb",fontSize:12,textAlign:"center",padding:14}}>Belum ada setoran</div>
-: myEmails.map(e => (
-<div className="hi" key={e.id}>
-<div className="hi-row">
-<div style={{flex:1}}>
-<div className="hi-email">{e.email}</div>
-<div className="hi-pay">💳 {paymentLabel(e.paymentOwner)}</div>
-{e.reason && <div className="hi-reason">❌ {e.reason}</div>}
-<div className="hi-time">{fmtDate(e.timestamp)} · {e.room}</div>
-</div>
-<span className={badge ${e.status==="accepted"?"b-acc":e.status==="denied"?"b-den":"b-pen"}}>
-{e.status==="accepted"?"✔ ACC":e.status==="denied"?"✖ DENIED":"⏳ PENDING"}
-</span>
-</div>
-</div>
-))
-)}
-{histTab === "penarikan" && (
-<div style={{color:"#bbb",fontSize:12,textAlign:"center",padding:14}}>Belum ada penarikan</div>
-)}
-</div>
-</>
-);
+  return (
+    <>
+      <div className="phdr">
+        <h2>🕐 Riwayat</h2>
+        <p>Semua aktivitas setoran akun Anda.</p>
+        <div className="phdr-bg">🕐</div>
+      </div>
+
+      <div className="card">
+        <div className="tab-bar">
+          <button
+            className={`tab ${histTab === "setoran" ? "active" : ""}`}
+            onClick={() => setHistTab("setoran")}
+          >
+            📤 Setoran
+          </button>
+
+          <button
+            className={`tab ${histTab === "penarikan" ? "active" : ""}`}
+            onClick={() => setHistTab("penarikan")}
+          >
+            💳 Penarikan
+          </button>
+        </div>
+
+        {histTab === "setoran" && (
+          myEmails.length === 0 ? (
+            <div style={{ color: "#bbb", fontSize: 12, textAlign: "center", padding: 14 }}>
+              Belum ada setoran
+            </div>
+          ) : (
+            myEmails.map(e => (
+              <div key={e.id}>
+                <div>{e.email}</div>
+              </div>
+            ))
+          )
+        )}
+
+        {histTab === "penarikan" && (
+          <div style={{ color: "#bbb", fontSize: 12, textAlign: "center", padding: 14 }}>
+            Belum ada penarikan
+          </div>
+        )}
+      </div>
+    </>
+  );
 }
 
 // ── Profil ────────────────────────────────────────────────────────────────────
